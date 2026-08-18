@@ -5,16 +5,16 @@
 services:
   db:
     image: postgres:16
-    container_name: restaurante-pg
+    container_name: clinica-pg
     restart: unless-stopped
     environment:
-      POSTGRES_DB: restaurantedb
+      POSTGRES_DB: clinicadb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: lapass
     ports:
       - "5432:5432"
     volumes:
-      - restaurante-datos:/var/lib/postgresql/data
+      - clinica-datos:/var/lib/postgresql/data
 
 volumes:
-  restaurante-datos:
+  clinica-datos:
