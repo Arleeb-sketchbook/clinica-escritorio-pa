@@ -5,16 +5,13 @@
 services:
   db:
     image: postgres:16
-    container_name: clinica-pg
+    container_name: postgres-clinica
     restart: unless-stopped
     environment:
-      POSTGRES_DB: clinicadb
+      POSTGRES_DB: clinica
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: lapass
+      POSTGRES_PASSWORD: 1122
     ports:
       - "5432:5432"
     volumes:
-      - clinica-datos:/var/lib/postgresql/data
-
-volumes:
-  clinica-datos:
+      - C:/Docker/Postgres:/var/lib/postgresql/data
