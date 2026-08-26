@@ -1,13 +1,28 @@
 package persistencia;
 
+import java.util.Map;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 public class Conexion {
 
-	private static final EntityManagerFactory FACTORIA =
-			Persistence.createEntityManagerFactory("clinica");
+	private static final String HOST = System.getProperty("db.host",
+			System.getenv().getOrDefault("DB_HOST", "26.246.187.230"));
+	private static final String USER = System.getProperty("db.user",
+			System.getenv().getOrDefault("DB_USER", "postgres"));
+	private static final String PASSWORD = System.getProperty("db.password",
+			System.getenv().getOrDefault("DB_PASSWORD", "1122"));
+
+	private static final EntityManagerFactory FACTORIA = Persistence.createEntityManagerFactory(
+			"clinica",
+			Map.of(
+					"jakarta.persistence.jdbc.url",
+					"jdbc:postgresql://" + HOST + ":5432/clinica",
+					"jakarta.persistence.jdbc.user", USER,
+					"jakarta.persistence.jdbc.password", PASSWORD
+			));
 
 	private Conexion() {
 	}

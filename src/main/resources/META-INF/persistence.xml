@@ -19,7 +19,7 @@
 
         <properties>
             <property name="jakarta.persistence.jdbc.url"
-                value="jdbc:postgresql://localhost:5432/clinica" />
+                value="jdbc:postgresql://26.246.187.230:5432/clinica" />
             <property name="jakarta.persistence.jdbc.user" value="postgres" />
             <property name="jakarta.persistence.jdbc.password" value="1122" />
 
