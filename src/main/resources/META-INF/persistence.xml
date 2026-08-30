@@ -19,11 +19,9 @@
 
         <properties>
             <property name="jakarta.persistence.jdbc.url"
-                value="jdbc:postgresql://26.246.187.230:5432/clinica" />
-            <property name="jakarta.persistence.jdbc.user" value="postgres" />
-            <property name="jakarta.persistence.jdbc.password" value="1122" />
+                value="jdbc:postgresql://localhost:5432/clinica" />
 
-            <!-- update: Hibernate crea o actualiza las tablas solo, a partir de las entidades -->
+            <!-- Las credenciales se resuelven por entorno/sistema para no dejar contraseñas en el repo -->
             <property name="hibernate.hbm2ddl.auto" value="update" />
 
             <!-- Poner en true para ver por consola el SQL que genera Hibernate -->

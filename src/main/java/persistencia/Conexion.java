@@ -9,11 +9,11 @@ import jakarta.persistence.Persistence;
 public class Conexion {
 
 	private static final String HOST = System.getProperty("db.host",
-			System.getenv().getOrDefault("DB_HOST", "26.246.187.230"));
+			System.getenv().getOrDefault("DB_HOST", "localhost"));
 	private static final String USER = System.getProperty("db.user",
 			System.getenv().getOrDefault("DB_USER", "postgres"));
 	private static final String PASSWORD = System.getProperty("db.password",
-			System.getenv().getOrDefault("DB_PASSWORD", "1122"));
+			System.getenv().getOrDefault("DB_PASSWORD", "postgres"));
 
 	private static final EntityManagerFactory FACTORIA = Persistence.createEntityManagerFactory(
 			"clinica",
