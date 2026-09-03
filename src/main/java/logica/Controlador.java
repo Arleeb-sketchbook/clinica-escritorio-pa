@@ -1,25 +1,30 @@
 package logica;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import datatypes.DTEstudio;
+import datatypes.DTLineaOrden;
 import datatypes.DTMedico;
+import datatypes.DTOrdenMedica;
 import datatypes.DTPaciente;
 import datatypes.DTPrestacion;
-import datatypes.DTTerapia;
 import datatypes.DTSeguido;
+import datatypes.DTTerapia;
 import datatypes.DTUsuario;
 import excepciones.AccesoNoAutorizadoException;
 import excepciones.CredencialesInvalidasException;
-import excepciones.PrestacionRepetidaException;
+import excepciones.OrdenSinPrestacionesException;
 import excepciones.PrestacionEnOrdenException;
+import excepciones.PrestacionRepetidaException;
 import excepciones.SeguidoRepetidoException;
 import excepciones.UsuarioRepetidoException;
 import interfaces.IControlador;
+import persistencia.OrdenMedicaDAO;
 import persistencia.PrestacionDAO;
 import persistencia.SeguidoDAO;
-import persistencia.OrdenMedicaDAO;
 import persistencia.UsuarioDAO;
 
 public class Controlador implements IControlador {
@@ -76,11 +81,35 @@ public class Controlador implements IControlador {
 
 	@Override
 	public List<DTPrestacion> listarPrestaciones() {
-		List<DTPrestacion> resultado = new ArrayList<>();
-		for (Prestacion prestacion : prestacionDAO.listarTodas()) {
-			resultado.add(convertirPrestacion(prestacion));
+		return convertirLista(prestacionDAO.listarTodas());
+	}
+
+	@Override
+	public List<DTPrestacion> listarPrestacionesPorNombre(String texto) {
+		String filtro = texto == null ? "" : texto.trim().toLowerCase();
+		return prestacionDAO.listarTodas().stream()
+				.filter(p -> filtro.isEmpty() || p.getNombre().toLowerCase().contains(filtro))
+				.sorted(Comparator.comparing(Prestacion::getNombre, String.CASE_INSENSITIVE_ORDER))
+				.map(this::convertirPrestacion)
+				.toList();
+	}
+
+	@Override
+	public List<DTPrestacion> listarPrestacionesPorPrecio(boolean ascendente) {
+		Comparator<Prestacion> comparador = Comparator.comparingDouble(Prestacion::getPrecio);
+		if (!ascendente) {
+			comparador = comparador.reversed();
 		}
-		return resultado;
+		return prestacionDAO.listarTodas().stream()
+				.sorted(comparador)
+				.map(this::convertirPrestacion)
+				.toList();
+	}
+
+	@Override
+	public DTPrestacion obtenerPrestacion(Long id) {
+		Prestacion prestacion = prestacionDAO.buscarPorId(id);
+		return prestacion == null ? null : convertirPrestacion(prestacion);
 	}
 
 	@Override
@@ -116,7 +145,7 @@ public class Controlador implements IControlador {
 	public void agregarSeguido(String emailPaciente, Long prestacionId)
 			throws AccesoNoAutorizadoException, SeguidoRepetidoException {
 		Paciente paciente = obtenerPaciente(emailPaciente);
-		Prestacion prestacion = obtenerPrestacion(prestacionId);
+		Prestacion prestacion = buscarPrestacion(prestacionId);
 		if (seguidoDAO.existe(paciente, prestacion)) {
 			throw new SeguidoRepetidoException("El paciente ya sigue esta prestación");
 		}
@@ -127,7 +156,7 @@ public class Controlador implements IControlador {
 	public void quitarSeguido(String emailPaciente, Long prestacionId)
 			throws AccesoNoAutorizadoException {
 		Paciente paciente = obtenerPaciente(emailPaciente);
-		Prestacion prestacion = obtenerPrestacion(prestacionId);
+		Prestacion prestacion = buscarPrestacion(prestacionId);
 		seguidoDAO.eliminar(paciente, prestacion);
 	}
 
@@ -139,6 +168,48 @@ public class Controlador implements IControlador {
 		for (Seguido seguido : seguidoDAO.listarPorPaciente(emailPaciente)) {
 			resultado.add(new DTSeguido(seguido.getId(), convertirPrestacion(seguido.getPrestacion()),
 					seguido.getFecha()));
+		}
+		return resultado;
+	}
+
+	@Override
+	public void confirmarOrdenMedica(String emailPaciente, Map<Long, Integer> cantidades)
+			throws AccesoNoAutorizadoException, OrdenSinPrestacionesException {
+		Paciente paciente = obtenerPaciente(emailPaciente);
+		if (cantidades == null || cantidades.isEmpty()) {
+			throw new OrdenSinPrestacionesException("La orden médica no tiene prestaciones");
+		}
+
+		OrdenMedica orden = new OrdenMedica(paciente);
+		for (Map.Entry<Long, Integer> entrada : cantidades.entrySet()) {
+			if (entrada.getValue() == null || entrada.getValue() <= 0) {
+				continue;
+			}
+			Prestacion prestacion = buscarPrestacion(entrada.getKey());
+			orden.agregarLinea(prestacion, entrada.getValue());
+		}
+		if (orden.getLineas().isEmpty()) {
+			throw new OrdenSinPrestacionesException("La orden médica no tiene prestaciones");
+		}
+
+		ordenMedicaDAO.guardar(orden);
+	}
+
+	@Override
+	public List<DTOrdenMedica> listarOrdenesPaciente(String emailPaciente)
+			throws AccesoNoAutorizadoException {
+		obtenerPaciente(emailPaciente);
+		List<DTOrdenMedica> resultado = new ArrayList<>();
+		for (OrdenMedica orden : ordenMedicaDAO.listarPorPaciente(emailPaciente)) {
+			List<DTLineaOrden> lineas = orden.getLineas().stream()
+					.map(linea -> new DTLineaOrden(
+							linea.getId(),
+							convertirPrestacion(linea.getPrestacion()),
+							linea.getCantidad(),
+							linea.getPrecioUnitario(),
+							linea.getSubtotal()))
+					.toList();
+			resultado.add(new DTOrdenMedica(orden.getId(), orden.getPaciente().getEmail(), orden.getFecha(), lineas));
 		}
 		return resultado;
 	}
@@ -169,12 +240,20 @@ public class Controlador implements IControlador {
 		throw new AccesoNoAutorizadoException("Solo un paciente puede gestionar sus seguidas");
 	}
 
-	private Prestacion obtenerPrestacion(Long id) {
+	private Prestacion buscarPrestacion(Long id) {
 		Prestacion prestacion = prestacionDAO.buscarPorId(id);
 		if (prestacion == null) {
 			throw new IllegalArgumentException("La prestación no existe");
 		}
 		return prestacion;
+	}
+
+	private List<DTPrestacion> convertirLista(List<Prestacion> prestaciones) {
+		List<DTPrestacion> resultado = new ArrayList<>();
+		for (Prestacion prestacion : prestaciones) {
+			resultado.add(convertirPrestacion(prestacion));
+		}
+		return resultado;
 	}
 
 	private DTUsuario convertirUsuario(Usuario usuario) {

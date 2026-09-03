@@ -8,10 +8,13 @@ services:
     container_name: postgres-clinica
     restart: unless-stopped
     environment:
-      POSTGRES_DB: clinica
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1122
+      POSTGRES_DB: ${POSTGRES_DB:-clinica}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
-      - C:/Docker/Postgres:/var/lib/postgresql/data
+      - postgres_clinica_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_clinica_data:
