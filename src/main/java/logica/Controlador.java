@@ -87,9 +87,24 @@ public class Controlador implements IControlador {
 	@Override
 	public List<DTPrestacion> listarPrestacionesPorNombre(String texto) {
 		String filtro = texto == null ? "" : texto.trim().toLowerCase();
-		return prestacionDAO.listarTodas().stream()
+		return ordenarPorNombre(prestacionDAO.listarTodas().stream()
 				.filter(p -> filtro.isEmpty() || p.getNombre().toLowerCase().contains(filtro))
-				.sorted(Comparator.comparing(Prestacion::getNombre, String.CASE_INSENSITIVE_ORDER))
+				.toList(), true);
+	}
+
+	@Override
+	public List<DTPrestacion> listarPrestacionesPorNombre(boolean ascendente) {
+		return ordenarPorNombre(prestacionDAO.listarTodas(), ascendente);
+	}
+
+	private List<DTPrestacion> ordenarPorNombre(List<Prestacion> prestaciones, boolean ascendente) {
+		Comparator<Prestacion> comparador = Comparator.comparing(Prestacion::getNombre,
+				String.CASE_INSENSITIVE_ORDER);
+		if (!ascendente) {
+			comparador = comparador.reversed();
+		}
+		return prestaciones.stream()
+				.sorted(comparador)
 				.map(this::convertirPrestacion)
 				.toList();
 	}
