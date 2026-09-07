@@ -3,7 +3,10 @@ package presentacion;
 import java.awt.BorderLayout;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -35,6 +38,11 @@ public class VerCatalogo extends JFrame {
         setLayout(new BorderLayout());
 
         add(new JScrollPane(tabla), BorderLayout.CENTER);
+        JButton verDetalles = new JButton("Ver detalles");
+        verDetalles.addActionListener(event -> verDetallesPrestacion());
+        JPanel acciones = new JPanel();
+        acciones.add(verDetalles);
+        add(acciones, BorderLayout.SOUTH);
         cargarCatalogo();
     }
 
@@ -69,6 +77,31 @@ public class VerCatalogo extends JFrame {
                     prestacion.getFranja(),
                     detalle
             });
+        }
+    }
+
+    private void verDetallesPrestacion() {
+        int fila = tabla.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccioná una prestación", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Long id = ((Number) modelo.getValueAt(fila, 0)).longValue();
+        DTPrestacion prestacion = controlador.obtenerPrestacion(id);
+        if (prestacion.getClass() == DTEstudio.class) {
+            DTEstudio estudio = (DTEstudio) prestacion;
+            JOptionPane.showMessageDialog(this,
+                        "Nombre: " + estudio.getNombre() + "\nDuración: "
+                            + estudio.getDuracionMinutos() + " minutos",
+                    "Detalles del estudio", JOptionPane.INFORMATION_MESSAGE);
+        } else if (prestacion.getClass() == DTTerapia.class) {
+            DTTerapia terapia = (DTTerapia) prestacion;
+            String derivacion = terapia.isRequiereDerivacion() ? "Sí" : "No";
+            JOptionPane.showMessageDialog(this,
+                    "Nombre: " + terapia.getNombre() + "\nRequiere derivación: " + derivacion
+                            + "\nCantidad de sesiones: " + terapia.getCantidadSesiones(),
+                    "Detalles de la terapia", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 }

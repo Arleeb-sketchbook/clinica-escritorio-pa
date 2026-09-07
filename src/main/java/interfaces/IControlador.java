@@ -36,6 +36,8 @@ public interface IControlador {
 
     List<DTPrestacion> listarPrestacionesPorNombre(String texto);
 
+        List<DTPrestacion> listarPrestacionesPorNombre(boolean ascendente);
+
     List<DTPrestacion> listarPrestacionesPorPrecio(boolean ascendente);
 
     DTPrestacion obtenerPrestacion(Long id);

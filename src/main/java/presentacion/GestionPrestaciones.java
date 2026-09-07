@@ -25,8 +25,11 @@ public class GestionPrestaciones extends JFrame {
 
         JPanel panel = new JPanel(new FlowLayout());
 
-        JButton alta = new JButton("Alta");
-        alta.addActionListener(event -> new AltaPrestacion(control, usuarioActual.getEmail()).setVisible(true));
+        JButton nuevoEstudio = new JButton("Nuevo estudio");
+        nuevoEstudio.addActionListener(event -> new AltaPrestacion(control, usuarioActual.getEmail(), true).setVisible(true));
+
+        JButton nuevaTerapia = new JButton("Nueva terapia");
+        nuevaTerapia.addActionListener(event -> new AltaPrestacion(control, usuarioActual.getEmail(), false).setVisible(true));
 
         JButton modificar = new JButton("Modificar");
         modificar.addActionListener(event -> new ModificarPrestacion(control, usuarioActual.getEmail()).setVisible(true));
@@ -34,7 +37,8 @@ public class GestionPrestaciones extends JFrame {
         JButton verCatalogo = new JButton("Ver catálogo");
         verCatalogo.addActionListener(event -> new VerCatalogo(control).setVisible(true));
 
-        panel.add(alta);
+        panel.add(nuevoEstudio);
+        panel.add(nuevaTerapia);
         panel.add(modificar);
         panel.add(verCatalogo);
 

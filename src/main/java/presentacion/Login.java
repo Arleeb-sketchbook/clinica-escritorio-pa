@@ -38,8 +38,8 @@ public class Login extends JFrame {
 
 		JButton ingresar = new JButton("Ingresar");
 		ingresar.addActionListener(event -> iniciarSesion());
-		JButton registrar = new JButton("Registrarse");
-		registrar.addActionListener(event -> registrarUsuario());
+		JButton registrar = new JButton("Registrar");
+		registrar.addActionListener(event -> elegirTipoRegistro());
 
 		JPanel botones = new JPanel();
 		botones.add(ingresar);
@@ -61,25 +61,40 @@ public class Login extends JFrame {
 		}
 	}
 
-	private void registrarUsuario() {
+	private void elegirTipoRegistro() {
+		Object[] opciones = { "Médico", "Paciente" };
+		int seleccion = JOptionPane.showOptionDialog(this,
+				"¿Qué tipo de usuario querés registrar?", "Tipo de registro",
+				JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+				opciones, opciones[1]);
+		if (seleccion == 0) {
+			registrarUsuario(true);
+		} else if (seleccion == 1) {
+			registrarUsuario(false);
+		}
+	}
+
+	private void registrarUsuario(boolean medico) {
 		JTextField nombre = new JTextField();
-		JTextField tipo = new JTextField("paciente");
+		JTextField emailRegistro = new JTextField();
 		JTextField dato = new JTextField();
 		JPasswordField clave = new JPasswordField();
-		Object[] campos = { "Nombre", nombre, "Email", email, "Contraseña", clave,
-				"Tipo (paciente/medico)", tipo, "Mutualista o especialidad", dato };
+		String etiquetaDato = medico ? "Especialidad" : "Mutualista";
+		Object[] campos = { "Nombre", nombre, "Email", emailRegistro, "Contraseña", clave,
+				etiquetaDato, dato };
 
-		if (JOptionPane.showConfirmDialog(this, campos, "Registrar usuario",
+		String titulo = medico ? "Registrar médico" : "Registrar paciente";
+		if (JOptionPane.showConfirmDialog(this, campos, titulo,
 				JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
 			return;
 		}
 
 		try {
-			if (tipo.getText().equalsIgnoreCase("medico")) {
-				controlador.registrarMedico(email.getText(), nombre.getText(),
+			if (medico) {
+				controlador.registrarMedico(emailRegistro.getText(), nombre.getText(),
 						new String(clave.getPassword()), dato.getText());
 			} else {
-				controlador.registrarPaciente(email.getText(), nombre.getText(),
+				controlador.registrarPaciente(emailRegistro.getText(), nombre.getText(),
 						new String(clave.getPassword()), dato.getText());
 			}
 			JOptionPane.showMessageDialog(this, "Usuario registrado correctamente");

@@ -22,17 +22,18 @@ public class AltaPrestacion extends JFrame {
     private final IControlador controlador;
     private final String emailMedico;
 
-    private final JComboBox<String> tipo = new JComboBox<>(new String[] { "Estudio", "Terapia" });
+    private final boolean estudio;
     private final JTextField nombre = new JTextField();
     private final JTextField precio = new JTextField();
     private final JComboBox<Franja> franja = new JComboBox<>(Franja.values());
     private final JTextField detalle = new JTextField();
     private final JCheckBox requiereDerivacion = new JCheckBox("Requiere derivación");
 
-    public AltaPrestacion(IControlador controlador, String emailMedico) {
-        super("Alta de prestación");
+    public AltaPrestacion(IControlador controlador, String emailMedico, boolean estudio) {
+        super(estudio ? "Nuevo estudio" : "Nueva terapia");
         this.controlador = controlador;
         this.emailMedico = emailMedico;
+        this.estudio = estudio;
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setSize(420, 260);
@@ -40,18 +41,18 @@ public class AltaPrestacion extends JFrame {
         setLayout(new BorderLayout(10, 10));
 
         JPanel form = new JPanel(new GridLayout(0, 2, 8, 8));
-        form.add(new JLabel("Tipo:"));
-        form.add(tipo);
         form.add(new JLabel("Nombre:"));
         form.add(nombre);
         form.add(new JLabel("Precio:"));
         form.add(precio);
         form.add(new JLabel("Franja:"));
         form.add(franja);
-        form.add(new JLabel("Duración / sesiones:"));
+        form.add(new JLabel(estudio ? "Duración (minutos):" : "Cantidad de sesiones:"));
         form.add(detalle);
-        form.add(new JLabel("Detalle adicional:"));
-        form.add(requiereDerivacion);
+        if (!estudio) {
+            form.add(new JLabel("Detalle adicional:"));
+            form.add(requiereDerivacion);
+        }
 
         JButton guardar = new JButton("Guardar");
         guardar.addActionListener(event -> guardarPrestacion());
@@ -77,7 +78,7 @@ public class AltaPrestacion extends JFrame {
             double precioValor = Double.parseDouble(precio.getText().trim());
             Franja franjaValor = (Franja) franja.getSelectedItem();
 
-            if ("Estudio".equals(tipo.getSelectedItem())) {
+            if (estudio) {
                 int duracion = Integer.parseInt(detalle.getText().trim());
                 controlador.altaEstudio(emailMedico, nombreTexto, precioValor, franjaValor, duracion);
             } else {
