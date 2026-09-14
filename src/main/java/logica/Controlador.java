@@ -211,6 +211,16 @@ public class Controlador implements IControlador {
 	}
 
 	@Override
+	public void eliminarOrdenMedica(String emailPaciente, Long ordenId)
+			throws AccesoNoAutorizadoException {
+		obtenerPaciente(emailPaciente);
+		if (!ordenMedicaDAO.existeOrdenParaPaciente(ordenId, emailPaciente)) {
+			throw new AccesoNoAutorizadoException("La orden no pertenece a este paciente");
+		}
+		ordenMedicaDAO.eliminarPorId(ordenId);
+	}
+
+	@Override
 	public List<DTOrdenMedica> listarOrdenesPaciente(String emailPaciente)
 			throws AccesoNoAutorizadoException {
 		obtenerPaciente(emailPaciente);
