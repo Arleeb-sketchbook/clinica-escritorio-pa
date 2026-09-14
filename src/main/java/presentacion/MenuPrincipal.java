@@ -170,6 +170,13 @@ public class MenuPrincipal extends JFrame {
                 verHistorial();
             });
             filaAccionesEspecificas.add(historial);
+
+            JButton borrarOrden = new JButton("Borrar orden");
+            borrarOrden.addActionListener(event -> {
+                ocultarOpcionesOrden();
+                eliminarOrden();
+            });
+            filaAccionesEspecificas.add(borrarOrden);
         }
 
         acciones.add(filaAccionesEspecificas);
@@ -458,6 +465,33 @@ public class MenuPrincipal extends JFrame {
             controlador.confirmarOrdenMedica(usuario.getEmail(), cantidades);
             JOptionPane.showMessageDialog(this, "Orden médica confirmada");
         } catch (IllegalArgumentException | AccesoNoAutorizadoException | OrdenSinPrestacionesException exception) {
+            mostrarError(exception.getMessage());
+        }
+    }
+
+    private void eliminarOrden() {
+        try {
+            List<DTOrdenMedica> ordenes = controlador.listarOrdenesPaciente(usuario.getEmail());
+            if (ordenes.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Todavía no tenés órdenes médicas");
+                return;
+            }
+
+            Object[] opciones = ordenes.stream()
+                    .map(orden -> "Orden #" + orden.getId())
+                    .toArray();
+
+            int seleccion = JOptionPane.showOptionDialog(this, "Seleccioná la orden a borrar:",
+                    "Borrar orden médica", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.QUESTION_MESSAGE, null, opciones, opciones[0]);
+            if (seleccion < 0) {
+                return;
+            }
+
+            Long ordenId = ordenes.get(seleccion).getId();
+            controlador.eliminarOrdenMedica(usuario.getEmail(), ordenId);
+            JOptionPane.showMessageDialog(this, "Orden médica borrada correctamente");
+        } catch (AccesoNoAutorizadoException exception) {
             mostrarError(exception.getMessage());
         }
     }

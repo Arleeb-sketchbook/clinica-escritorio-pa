@@ -60,6 +60,9 @@ public interface IControlador {
     void confirmarOrdenMedica(String emailPaciente, Map<Long, Integer> cantidades)
             throws AccesoNoAutorizadoException, OrdenSinPrestacionesException;
 
+    void eliminarOrdenMedica(String emailPaciente, Long ordenId)
+            throws AccesoNoAutorizadoException;
+
     List<DTOrdenMedica> listarOrdenesPaciente(String emailPaciente)
             throws AccesoNoAutorizadoException;
 }

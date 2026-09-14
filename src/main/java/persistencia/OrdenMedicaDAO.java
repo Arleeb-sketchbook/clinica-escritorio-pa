@@ -20,6 +20,34 @@ public class OrdenMedicaDAO {
 		}
 	}
 
+	public boolean existeOrdenParaPaciente(Long ordenId, String emailPaciente) {
+		try (EntityManager entityManager = Conexion.crearEntityManager()) {
+			Long cantidad = entityManager.createQuery(
+					"SELECT COUNT(orden) FROM OrdenMedica orden WHERE orden.id = :ordenId AND orden.paciente.email = :emailPaciente",
+					Long.class)
+				.setParameter("ordenId", ordenId)
+				.setParameter("emailPaciente", emailPaciente)
+				.getSingleResult();
+			return cantidad > 0;
+		}
+	}
+
+	public void eliminarPorId(Long ordenId) {
+		try (EntityManager entityManager = Conexion.crearEntityManager()) {
+			entityManager.getTransaction().begin();
+			try {
+				OrdenMedica orden = entityManager.find(OrdenMedica.class, ordenId);
+				if (orden != null) {
+					entityManager.remove(orden);
+				}
+				entityManager.getTransaction().commit();
+			} catch (RuntimeException exception) {
+				rollback(entityManager);
+				throw exception;
+			}
+		}
+	}
+
 	public List<OrdenMedica> listarPorPaciente(String email) {
 		try (EntityManager entityManager = Conexion.crearEntityManager()) {
 			return entityManager.createQuery(
