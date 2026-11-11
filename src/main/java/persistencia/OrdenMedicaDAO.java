@@ -48,6 +48,26 @@ public class OrdenMedicaDAO {
 		}
 	}
 
+	/** Elimina las órdenes y sus líneas usando el cascade de la entidad. */
+	public int eliminarTodas() {
+		try (EntityManager entityManager = Conexion.crearEntityManager()) {
+			entityManager.getTransaction().begin();
+			try {
+				List<OrdenMedica> ordenes = entityManager.createQuery(
+						"SELECT orden FROM OrdenMedica orden", OrdenMedica.class)
+						.getResultList();
+				for (OrdenMedica orden : ordenes) {
+					entityManager.remove(orden);
+				}
+				entityManager.getTransaction().commit();
+				return ordenes.size();
+			} catch (RuntimeException exception) {
+				rollback(entityManager);
+				throw exception;
+			}
+		}
+	}
+
 	public List<OrdenMedica> listarPorPaciente(String email) {
 		try (EntityManager entityManager = Conexion.crearEntityManager()) {
 			return entityManager.createQuery(

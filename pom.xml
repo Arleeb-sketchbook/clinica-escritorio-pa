@@ -33,6 +33,12 @@
             <version>42.7.3</version>
         </dependency>
 
+        <!-- Parte 2: publicación SOAP, igual que en la guía. -->
+        <dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-rt</artifactId>
+            <version>4.0.2</version>
+        </dependency>
     </dependencies>
 
     <build>

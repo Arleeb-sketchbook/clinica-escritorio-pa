@@ -63,6 +63,9 @@ public interface IControlador {
     void eliminarOrdenMedica(String emailPaciente, Long ordenId)
             throws AccesoNoAutorizadoException;
 
+    int eliminarTodasOrdenesMedicas(String emailMedico)
+            throws AccesoNoAutorizadoException;
+
     List<DTOrdenMedica> listarOrdenesPaciente(String emailPaciente)
             throws AccesoNoAutorizadoException;
 }
