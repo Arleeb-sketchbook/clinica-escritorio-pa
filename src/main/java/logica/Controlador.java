@@ -221,6 +221,13 @@ public class Controlador implements IControlador {
 	}
 
 	@Override
+	public int eliminarTodasOrdenesMedicas(String emailMedico)
+			throws AccesoNoAutorizadoException {
+		verificarMedico(emailMedico);
+		return ordenMedicaDAO.eliminarTodas();
+	}
+
+	@Override
 	public List<DTOrdenMedica> listarOrdenesPaciente(String emailPaciente)
 			throws AccesoNoAutorizadoException {
 		obtenerPaciente(emailPaciente);
