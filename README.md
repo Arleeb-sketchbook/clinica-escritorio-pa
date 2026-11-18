@@ -7,7 +7,7 @@ Java 21 · Swing · Hibernate 6 · PostgreSQL 16 · Maven · Jakarta XML Web Ser
 - Esta carpeta: aplicación de escritorio y servidor SOAP.
 - `../clinica-web`: cliente con servlets, JSP, JSTL y htmx. Produce `clinica.war`.
 
-
+```text
 Swing ────────────────────────┐
                              ▼
 Navegador → Tomcat → SOAP → IControlador → Controlador → DAO → Hibernate → PostgreSQL
@@ -17,85 +17,74 @@ Navegador → Tomcat → SOAP → IControlador → Controlador → DAO → Hiber
 
 JDK 21, Maven, Docker y Tomcat 10.1 con Java 21 para el cliente web.
 
-## Parte 1
+## Inicialización
 
-Desde esta carpeta:
+El orden de inicio es PostgreSQL, servidor Java con SOAP y, por último, cliente
+web en Tomcat. Se necesitan dos ventanas de PowerShell.
+
+### Ventana 1: base de datos y servidor SOAP
+
+Desde la raíz de este proyecto:
 
 ```powershell
+cd "$HOME\clinica-escritorio-pa"
 docker compose up -d
-mvn clean package
-mvn exec:java
+mvn clean package -DskipTests
 ```
 
-La clínica no precarga usuarios: registrá un médico y un paciente desde el login.
-La aplicación usa por defecto la base `clinica` en localhost:5432,
-usuario postgres y contraseña postgres, como el Compose incluido.
-Para otros valores, Java lee DB_HOST, DB_USER y DB_PASSWORD o las propiedades
-db.host, db.user y db.password. Cambiar POSTGRES_USER/PASSWORD en Compose no cambia
-automáticamente las variables de Java. El nombre de base sigue siendo clinica.
-
-## Parte 2: orden de arranque
-
-El orden es obligatorio: **1) PostgreSQL, 2) servidor Java con SOAP publicado,
-3) cliente web y Tomcat**. La web no contiene la lógica ni accede a la base por
-su cuenta: todas las operaciones pasan por el servicio SOAP.
-
-| Paso | Componente | Cómo comprobarlo |
-|---|---|---|
-| 1 | PostgreSQL | `docker compose ps` muestra el contenedor de base en ejecución. |
-| 2 | Servidor y SOAP | `http://localhost:9876/controlador?wsdl` muestra el WSDL. |
-| 3 | Cliente web | Maven genera `../clinica-web/target/clinica.war`. |
-| 4 | Tomcat | Abrir `http://localhost:8080/clinica/`. |
-
-No continúes al siguiente paso hasta que la comprobación del anterior funcione.
-
-### 1. Base de datos y servidor
+Si hay una ventana anterior de la aplicación titulada **Clínica - Iniciar
+sesión**, cerrala antes de iniciar el servidor. Luego ejecutá:
 
 ```powershell
-docker compose up -d
-mvn clean package
-java "-Dws.url=http://0.0.0.0:9876/controlador" -cp target/clinica.jar publicadores.Servidor
+java "-Dws.url=http://0.0.0.0:9876/controlador" -cp target\clinica.jar publicadores.Servidor
 ```
 
-Se publica el servicio y se abre también Swing. La dirección con 0.0.0.0 permite
-que el Tomcat de Docker alcance el servidor del equipo. Para uso local sin
-contenedores, se puede usar localhost.
+El servidor publica SOAP y abre también la aplicación de escritorio. Dejá esta
+ventana abierta mientras uses el cliente web. Comprobá el servicio en
+http://localhost:9876/controlador?wsdl.
 
-WSDL para el navegador y la compilación: http://localhost:9876/controlador?wsdl
+### Ventana 2: cliente web y Tomcat
 
-El proceso Java debe permanecer activo mientras se compila o se usa la aplicación
-web.
-
-### 2. Compilar el cliente en otra terminal
+Abrí otra ventana de PowerShell y compilá el cliente:
 
 ```powershell
-cd ..\clinica-web
+cd "$HOME\clinica-web"
 mvn clean package
 ```
 
-Maven consulta el WSDL y genera los stubs en target/generated-sources/wsimport.
-Si SOAP no está arriba, `wsimport` no puede leer el WSDL y `mvn clean package`
-falla con `Connection refused` / `Failed to parse the WSDL`. En ese caso, volvé
-al paso 1, iniciá el servidor, comprobá la dirección WSDL y repetí la compilación.
-Si SOAP se apaga después del despliegue, las operaciones que necesitan datos del
-servidor fallarán hasta que se reinicie.
+Si el contenedor `clinica-tomcat` ya existe, copiá el WAR y reinicialo:
 
-### 3. Tomcat y despliegue
+```powershell
+docker cp "$HOME\clinica-web\target\clinica.war" clinica-tomcat:/usr/local/tomcat/webapps/
+docker restart clinica-tomcat
+```
+
+Si Docker indica que no existe el contenedor, crealo y copiá el WAR:
 
 ```powershell
 docker run -d --name clinica-tomcat -p 8080:8080 -e "CATALINA_OPTS=-Dws.url=http://host.docker.internal:9876/controlador" tomcat:10.1-jdk21
-docker cp target/clinica.war clinica-tomcat:/usr/local/tomcat/webapps/
+docker cp "$HOME\clinica-web\target\clinica.war" clinica-tomcat:/usr/local/tomcat/webapps/
 ```
 
-Abrir http://localhost:8080/clinica/
+Cuando Tomcat termine de desplegar la aplicación, abrí
+http://localhost:8080/clinica/.
 
-Para abrir la web a mano, escribí esa dirección en el navegador después de que
-Tomcat termine el despliegue.
+Maven consulta el WSDL y genera los stubs en `target/generated-sources/wsimport`.
+Por eso, el servidor SOAP debe estar activo antes de compilar el cliente. Si se
+apaga, las operaciones web que necesitan datos del servidor fallarán hasta que
+se reinicie.
 
-Con Tomcat instalado directamente, copiar el WAR a su carpeta webapps. El servicio
-se busca por defecto en localhost:9876. La propiedad ws.url se puede cambiar en
-CATALINA_OPTS sin recompilar. La propiedad wsdl.url cambia la dirección usada al
-generar los stubs: `mvn package "-Dwsdl.url=http://IP:9876/controlador?wsdl"`.
+La aplicación usa por defecto la base `clinica` en localhost:5432, usuario
+`postgres` y contraseña `postgres`, como el Compose incluido. Para otros valores,
+Java lee `DB_HOST`, `DB_USER` y `DB_PASSWORD` o las propiedades `db.host`,
+`db.user` y `db.password`. Cambiar `POSTGRES_USER` o `POSTGRES_PASSWORD` en Compose
+no cambia automáticamente las variables de Java. El nombre de base sigue siendo
+`clinica`.
+
+Con Tomcat instalado directamente, copiá el WAR a su carpeta `webapps`. El
+servicio se busca por defecto en localhost:9876. La propiedad `ws.url` se puede
+cambiar en `CATALINA_OPTS` sin recompilar. La propiedad `wsdl.url` cambia la
+dirección usada al generar los stubs: `mvn package "-Dwsdl.url=http://IP:9876/controlador?wsdl"`.
 
 ## Publicadores
 
@@ -120,8 +109,7 @@ específicos de estudio o terapia.
 9. Cambiar su precio: las líneas de las órdenes anteriores conservan el precio unitario.
 10. Angostar la ventana: catálogo en una columna y tablas en bloques rotulados.
 
-Los stubs y compilados quedan en target y no se versionan. Para entregar ambos
-proyectos, incluir también la carpeta hermana clinica-web en el repositorio de entrega.
+Los stubs y compilados quedan en `target` y no se versionan.
 
 ### Liberar prestaciones usadas en órdenes
 
