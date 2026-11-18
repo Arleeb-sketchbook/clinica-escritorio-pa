@@ -11,7 +11,6 @@ import interfaces.IControlador;
 import jakarta.jws.WebMethod;
 import jakarta.jws.WebService;
 
-/** Adaptador SOAP: traduce datos y delega las reglas en la lógica de la parte 1. */
 @WebService
 public class ControladorPublish {
     private final IControlador icon = Fabrica.getControlador();

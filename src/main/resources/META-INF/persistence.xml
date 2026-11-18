@@ -4,7 +4,6 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
 
-    <!-- El nombre "clinica" es el que usa Conexion.java -->
     <persistence-unit name="clinica" transaction-type="RESOURCE_LOCAL">
 
         <class>logica.Usuario</class>
@@ -21,10 +20,8 @@
             <property name="jakarta.persistence.jdbc.url"
                 value="jdbc:postgresql://localhost:5432/clinica" />
 
-            <!-- Las credenciales se resuelven por entorno/sistema para no dejar contraseñas en el repo -->
             <property name="hibernate.hbm2ddl.auto" value="update" />
 
-            <!-- Poner en true para ver por consola el SQL que genera Hibernate -->
             <property name="hibernate.show_sql" value="true" />
             <property name="hibernate.format_sql" value="true" />
         </properties>
