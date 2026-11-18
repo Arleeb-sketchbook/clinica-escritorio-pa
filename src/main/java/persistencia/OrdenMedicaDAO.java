@@ -48,7 +48,6 @@ public class OrdenMedicaDAO {
 		}
 	}
 
-	/** Elimina las órdenes y sus líneas usando el cascade de la entidad. */
 	public int eliminarTodas() {
 		try (EntityManager entityManager = Conexion.crearEntityManager()) {
 			entityManager.getTransaction().begin();
